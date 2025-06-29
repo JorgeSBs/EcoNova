@@ -1,0 +1,121 @@
+/* Estilos para la notificación personalizada */
+.custom-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 320px; /* Equivalente a max-w-xs de Tailwind */
+    padding: 16px; /* Equivalente a p-4 */
+    margin-bottom: 16px; /* Equivalente a mb-4 */
+    color: #4B5563; /* text-gray-500 */
+    background-color: #FFFFFF; /* bg-white */
+    border-radius: 8px; /* rounded-lg */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* shadow */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease-in-out;
+    z-index: 9999; /* z-50 */
+}
+
+/* Modo oscuro (si lo necesitas, se activaría con una clase 'dark' en el body/html) */
+body.dark .custom-toast {
+    color: #9CA3AF; /* dark:text-gray-400 */
+    background-color: #1F2937; /* dark:bg-gray-800 */
+}
+
+.custom-toast-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.custom-toast-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.custom-toast-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 32px; /* w-8 */
+    height: 32px; /* h-8 */
+    color: #10B981; /* text-green-500 */
+    background-color: #D1FAE5; /* bg-green-100 */
+    border-radius: 8px; /* rounded-lg */
+}
+
+body.dark .custom-toast-icon {
+    background-color: #065F46; /* dark:bg-green-800 */
+    color: #A7F3D0; /* dark:text-green-200 */
+}
+
+.custom-toast-svg-icon {
+    width: 20px; /* w-5 */
+    height: 20px; /* h-5 */
+}
+
+.custom-toast-message {
+    margin-inline-start: 12px; /* ms-3 */
+    font-size: 14px; /* text-sm */
+    font-weight: normal; /* font-normal */
+}
+
+.custom-toast-close-button {
+    margin-inline-start: auto; /* ms-auto */
+    margin-inline-end: -6px; /* -mx-1.5 */
+    margin-top: -6px; /* -my-1.5 */
+    background-color: #FFFFFF; /* bg-white */
+    color: #9CA3AF; /* text-gray-400 */
+    border-radius: 8px; /* rounded-lg */
+    padding: 6px; /* p-1.5 */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px; /* h-8 */
+    width: 32px; /* w-8 */
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.custom-toast-close-button:hover {
+    color: #111827; /* hover:text-gray-900 */
+    background-color: #F9FAFB; /* hover:bg-gray-100 */
+}
+
+.custom-toast-close-button:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px #E5E7EB; /* focus:ring-2 focus:ring-gray-300 */
+}
+
+body.dark .custom-toast-close-button {
+    background-color: #1F2937; /* dark:bg-gray-800 */
+    color: #6B7280; /* dark:text-gray-500 */
+}
+
+body.dark .custom-toast-close-button:hover {
+    background-color: #374151; /* dark:hover:bg-gray-700 */
+    color: #FFFFFF; /* dark:hover:text-white */
+}
+
+.custom-toast-svg-close-icon {
+    width: 12px; /* w-3 */
+    height: 12px; /* h-3 */
+}
+
+/* Ocultar texto para lectores de pantalla */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}

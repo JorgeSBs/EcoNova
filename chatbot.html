@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco-Chatbot de Reciclaje</title>
+    <link rel="manifest" href="/manifest.json">
+
+    <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="EcoNova">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos para el indicador de carga */
+        .dot-pulse {
+            position: relative;
+            left: -9999px;
+            width: 10px;
+            height: 10px;
+            border-radius: 5px;
+            background-color: #989697;
+            color: #989697;
+            box-shadow: 9999px 0 0 -5px;
+            animation: dotPulse 1.5s infinite linear;
+            animation-delay: .25s;
+        }
+
+        .dot-pulse::before, .dot-pulse::after {
+            content: '';
+            display: inline-block;
+            position: absolute;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 5px;
+            background-color: #989697;
+            color: #989697;
+        }
+
+        .dot-pulse::before {
+            box-shadow: 9984px 0 0 -5px;
+            animation: dotPulseBefore 1.5s infinite linear;
+            animation-delay: 0s;
+        }
+
+        @keyframes dotPulseBefore {
+            0% {
+                box-shadow: 9984px 0 0 -5px;
+            }
+            30% {
+                box-shadow: 9984px 0 0 2px;
+            }
+            60%, 100% {
+                box-shadow: 9984px 0 0 -5px;
+            }
+        }
+
+        @keyframes dotPulse {
+            0% {
+                box-shadow: 9999px 0 0 -5px;
+            }
+            30% {
+                box-shadow: 9999px 0 0 2px;
+            }
+            60%, 100% {
+                box-shadow: 9999px 0 0 -5px;
+            }
+        }
+
+        @keyframes dotPulseAfter {
+            0% {
+                box-shadow: 10014px 0 0 -5px;
+            }
+            30% {
+                box-shadow: 10014px 0 0 2px;
+            }
+            60%, 100% {
+                box-shadow: 10014px 0 0 -5px;
+            }
+        }
+
+        /* Estilos para el Sidebar (Menú Hamburguesa) */
+        .sidebar {
+            width: 0;
+            overflow-x: hidden;
+            transition: 0.5s;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background-color: #f0fdf4; /* green-50 */
+            padding-top: 60px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            display: flex; /* Para flexbox interno */
+            flex-direction: column; /* Para apilar elementos */
+        }
+        .sidebar.open {
+            width: 250px; /* Ancho del menú abierto */
+        }
+        .sidebar a {
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #333;
+            display: block;
+            transition: 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: #d1fae5; /* green-100 */
+        }
+        .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+            color: #333;
+            text-decoration: none;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        .overlay.active {
+            display: block;
+        }
+        /* Ajuste para el botón de nuevo chat en el sidebar */
+        #start-new-chat-sidebar-btn {
+            margin: 1rem; /* Espaciado alrededor del botón */
+        }
+        #chat-list {
+            flex-grow: 1; /* Permite que la lista de chats ocupe el espacio restante */
+            overflow-y: auto; /* Hace que la lista sea desplazable */
+            padding: 0 0.5rem; /* Padding horizontal */
+        }
+        .chat-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0.375rem; /* rounded-md */
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 0.95rem;
+        }
+        .chat-list-item:hover {
+            background-color: #d1fae5; /* green-100 */
+        }
+        .chat-list-item.selected {
+            background-color: #bbf7d0; /* green-200 */
+            font-weight: 600; /* semibold */
+        }
+        .chat-list-item-title {
+            flex-grow: 1;
+            margin-right: 0.5rem;
+            white-space: nowrap; /* Evita que el texto se envuelva */
+            overflow: hidden;    /* Oculta el texto que desborda */
+            text-overflow: ellipsis; /* Añade puntos suspensivos (...) */
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 flex items-center justify-center p-4 font-sans">
+
+    <div id="sidebar-overlay" class="overlay"></div>
+
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <h2 class="text-xl font-bold p-4 pb-2 text-green-800">Tus Chats</h2>
+        <button id="start-new-chat-sidebar-btn" class="w-[calc(100%-2rem)] bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 mb-2 rounded-md shadow-md transition-colors duration-200">
+            + Nuevo Chat
+        </button>
+        <div id="chat-list" class="flex flex-col gap-1">
+            </div>
+    </div>
+
+    <div class="w-full max-w-2xl bg-white shadow-xl rounded-2xl flex flex-col h-[80vh] overflow-hidden">
+        <div class="p-4 bg-green-600 text-white rounded-t-2xl shadow-md flex items-center justify-between">
+            <button id="open-sidebar-btn" class="bg-green-700 hover:bg-green-800 text-white p-2 rounded-full shadow-md transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+            <div class="flex-1 text-center">
+                <h1 class="text-2xl font-bold">♻️ Eco-Chatbot ♻️</h1>
+                <p class="text-sm mt-1">Pregunta sobre reciclaje, reutilización y ecología</p>
+                <p id="user-id-display" class="text-xs mt-1 opacity-75"></p>
+            </div>
+            <button id="back-button" class="bg-green-700 hover:bg-green-800 text-white p-2 rounded-full shadow-md transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </button>
+        </div>
+
+        <div id="chat-history" class="flex-1 p-4 overflow-y-auto space-y-4">
+            </div>
+
+        <div class="p-4 border-t border-gray-200 bg-gray-50 flex flex-col gap-3 rounded-b-2xl">
+            <div id="image-preview-container" class="hidden relative w-24 h-24 rounded-lg overflow-hidden border-2 border-green-400 self-start">
+                <img id="image-preview" src="#" alt="Preview" class="w-full h-full object-cover" />
+                <button id="clear-image-btn" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 text-xs">
+                    X
+                </button>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="camera-button" class="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-md transition-colors duration-200 flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </button>
+                <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    class="hidden"
+                />
+
+                <textarea
+                    id="user-input"
+                    class="flex-1 p-3 border border-gray-300 rounded-xl focus:ring-green-500 focus:border-green-500 resize-none overflow-y-auto shadow-sm"
+                    placeholder="Haz una pregunta o sube una imagen..."
+                ></textarea>
+                <button
+                    id="send-button"
+                    class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-md transition-colors duration-200 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importaciones de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            onSnapshot,
+            query,
+            orderBy,
+            getDocs,
+            doc,
+            getDoc,
+            setDoc,
+            deleteDoc,
+            writeBatch,
+            serverTimestamp // Import para timestamp del servidor
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Configuración de Firebase ---
+        // ¡REEMPLAZA ESTO CON TU PROPIA CONFIGURACIÓN DE FIREBASE!
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtDX0Upgn6eUWP6PWqACduw0UJSpQ7cYc", // Tu API Key
+            authDomain: "evalucacion-fb656.firebaseapp.com", // Tu Auth Domain
+            databaseURL: "https://evalucacion-fb656-default-rtdb.firebaseio.com", // Tu Database URL
+            projectId: "evalucacion-fb656", // Tu Project ID
+            storageBucket: "evalucacion-fb656.appspot.com", // Tu Storage Bucket
+            messagingSenderId: "446865801864", // Tu Messaging Sender ID
+            appId: "1:446865801864:web:b51d561c84c62cb4a7553d" // Tu App ID
+        };
+        const appId = firebaseConfig.projectId; // Usamos el projectId como appId para la ruta de Firestore
+
+        let app;
+        // Solo inicializa Firebase si la configuración es válida
+        if (Object.keys(firebaseConfig).length > 0 && firebaseConfig.apiKey !== "TU_API_KEY_AQUI") {
+            app = initializeApp(firebaseConfig);
+        } else {
+            console.error("Firebase config is missing or placeholder values are still present. Please ensure you've replaced placeholder values with your actual Firebase configuration.");
+            alert("Error de configuración de Firebase. Por favor, revisa la consola del navegador para más detalles y asegúrate de haber insertado tu configuración real de Firebase.");
+        }
+
+        // --- Variables Globales ---
+        let db;
+        let auth;
+        let currentUserId = null;
+        let currentChatId = null; // ID del chat actual
+        let messagesCollectionRef; // Referencia a la colección de mensajes del chat actual
+        let unsubscribeFromFirestore = null; // Para desuscribirse del listener de mensajes
+        let unsubscribeFromChats = null; // Para desuscribirse del listener de chats
+
+        // --- Referencias a elementos del DOM ---
+        const chatHistoryDiv = document.getElementById('chat-history');
+        const userInputTextarea = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const imageUploadInput = document.getElementById('image-upload');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const clearImageButton = document.getElementById('clear-image-btn');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const cameraButton = document.getElementById('camera-button');
+        const backButton = document.getElementById('back-button'); // ¡Nueva referencia!
+
+        // Referencias para el menú hamburguesa
+        const openSidebarBtn = document.getElementById('open-sidebar-btn');
+        const mySidebar = document.getElementById('mySidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const chatListDiv = document.getElementById('chat-list');
+        const startNewChatSidebarBtn = document.getElementById('start-new-chat-sidebar-btn'); // Botón de nuevo chat en sidebar
+
+        let selectedImageFile = null;
+        let isLoading = false; // Estado de carga para el botón de envío y el indicador
+
+        // --- Inicialización de Firebase y Autenticación ---
+        const initializeFirebase = async () => {
+            if (!app) {
+                appendMessage('text', "Error: Firebase no pudo inicializarse. El historial de chat no se guardará.", 'bot');
+                return;
+            }
+
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            // Observador de estado de autenticación
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUserId = user.uid;
+                    userIdDisplay.textContent = `ID de Usuario: ${currentUserId.substring(0, 8)}...`; // Mostrar solo una parte del ID
+                    console.log("Firebase initialized. User ID:", currentUserId);
+                    setupChatsListener(); // Configura el listener para la lista de chats
+                    await loadOrCreateDefaultChat(); // Carga o crea el chat por defecto al inicio
+                } else {
+                    console.log("No user signed in. Attempting anonymous sign-in...");
+                    try {
+                        await signInAnonymously(auth); // Inicia sesión anónimamente si no hay usuario
+                    } catch (error) {
+                        console.error("Error signing in to Firebase:", error);
+                        appendMessage('text', "Error al iniciar sesión en Firebase. El historial de chat no se cargará ni guardará.", 'bot');
+                    }
+                }
+            });
+        };
+
+        // --- Gestión de Chats (Firestore) ---
+
+        /**
+         * Carga el chat más reciente del usuario o crea uno nuevo si no existen chats.
+         */
+        const loadOrCreateDefaultChat = async () => {
+            if (!currentUserId) return;
+
+            const chatsRef = collection(db, `artifacts/${appId}/users/${currentUserId}/chats`);
+            const q = query(chatsRef, orderBy("createdAt", "desc"));
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                console.log("No existing chats found. Creating a new default chat.");
+                await createNewChat("Nuevo Chat", true); // Crea un chat nuevo y lo marca como default
+            } else {
+                // Carga el chat más reciente
+                const lastChat = snapshot.docs[0].data();
+                await loadChat(snapshot.docs[0].id, lastChat.title || "Chat sin título");
+            }
+        };
+
+        /**
+         * Configura un listener en Firestore para obtener la lista de chats del usuario.
+         * Actualiza la UI del menú hamburguesa cada vez que cambia la lista de chats.
+         */
+        const setupChatsListener = () => {
+            if (!currentUserId) return;
+
+            if (unsubscribeFromChats) {
+                unsubscribeFromChats(); // Desuscribe el listener anterior si existe
+                console.log("Previous chats listener detached.");
+            }
+
+            const chatsRef = collection(db, `artifacts/${appId}/users/${currentUserId}/chats`);
+            const q = query(chatsRef, orderBy("createdAt", "desc")); // Ordena por fecha de creación
+
+            unsubscribeFromChats = onSnapshot(q, (snapshot) => {
+                chatListDiv.innerHTML = ''; // Limpia la lista actual
+                if (snapshot.empty && currentChatId) {
+                    // Si todos los chats fueron eliminados y estábamos en uno, crea uno nuevo
+                    createNewChat("Nuevo Chat", true);
+                    return;
+                }
+                snapshot.forEach((doc) => {
+                    const chat = doc.data();
+                    const chatId = doc.id;
+                    const chatTitle = chat.title || `Chat ${chatId.substring(0, 6)}`; // Usa el título o un ID corto
+                    renderChatListItem(chatId, chatTitle);
+                });
+            }, (error) => {
+                console.error("Error listening to chats:", error);
+                appendMessage('text', "Error al cargar la lista de chats.", 'bot');
+            });
+        };
+
+        /**
+         * Renderiza un elemento de la lista de chats en el sidebar.
+         * @param {string} chatId - El ID del chat.
+         * @param {string} chatTitle - El título del chat.
+         */
+        const renderChatListItem = (chatId, chatTitle) => {
+            const chatItemDiv = document.createElement('div');
+            chatItemDiv.className = `chat-list-item ${chatId === currentChatId ? 'selected' : ''}`;
+            chatItemDiv.setAttribute('data-chat-id', chatId);
+
+            const titleSpan = document.createElement('span');
+            titleSpan.textContent = chatTitle;
+            titleSpan.className = "chat-list-item-title";
+
+            const deleteButton = document.createElement('button');
+            deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 hover:text-red-700" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 00-1 1v4a1 1 0 102 0v-4a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v4a1 1 0 102 0v-4a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>`;
+            deleteButton.className = "p-1 rounded-full hover:bg-gray-200 transition-colors duration-200 flex-shrink-0";
+            deleteButton.title = "Eliminar chat";
+            deleteButton.addEventListener('click', (event) => {
+                event.stopPropagation(); // Evita que se active el click del item del chat
+                if (confirm(`¿Estás seguro de que quieres eliminar el chat "${chatTitle}"? Esta acción no se puede deshacer.`)) {
+                    deleteChat(chatId);
+                }
+            });
+
+            chatItemDiv.appendChild(titleSpan);
+            chatItemDiv.appendChild(deleteButton);
+
+            chatItemDiv.addEventListener('click', async () => {
+                if (chatId !== currentChatId) {
+                    await loadChat(chatId, chatTitle);
+                    closeNav(); // Cierra el sidebar después de seleccionar
+                }
+            });
+            chatListDiv.appendChild(chatItemDiv);
+        };
+
+        /**
+         * Elimina un chat y todos sus mensajes de Firestore.
+         * @param {string} chatIdToDelete - El ID del chat a eliminar.
+         */
+        const deleteChat = async (chatIdToDelete) => {
+            if (!currentUserId) return;
+
+            const chatRef = doc(db, `artifacts/${appId}/users/${currentUserId}/chats`, chatIdToDelete);
+            const messagesRef = collection(chatRef, 'messages');
+
+            // Eliminar todos los mensajes en lotes (batch delete)
+            try {
+                const snapshot = await getDocs(messagesRef);
+                if (!snapshot.empty) {
+                    const batch = writeBatch(db);
+                    snapshot.docs.forEach((msgDoc) => {
+                        batch.delete(msgDoc.ref);
+                    });
+                    await batch.commit();
+                    console.log(`Todos los mensajes del chat ${chatIdToDelete} eliminados.`);
+                }
+            } catch (error) {
+                console.error(`Error eliminando mensajes del chat ${chatIdToDelete}:`, error);
+                alert("Error al eliminar los mensajes del chat.");
+                return;
+            }
+
+            // Eliminar el documento del chat
+            try {
+                await deleteDoc(chatRef);
+                console.log(`Chat ${chatIdToDelete} eliminado.`);
+            } catch (error) {
+                console.error(`Error eliminando el documento del chat ${chatIdToDelete}:`, error);
+                alert("Error al eliminar el chat.");
+                return;
+            }
+
+            // Si se eliminó el chat actual, carga un nuevo chat por defecto o crea uno
+            if (chatIdToDelete === currentChatId) {
+                currentChatId = null; // Resetea el chat actual
+                await loadOrCreateDefaultChat(); // Carga el más reciente o crea uno nuevo
+            }
+        };
+
+
+        /**
+         * Carga un chat específico por su ID, actualiza la UI y el listener de Firestore.
+         * @param {string} id - El ID del chat a cargar.
+         * @param {string} title - El título del chat a cargar.
+         */
+        const loadChat = async (id, title) => {
+            if (currentChatId === id) return; // Ya estamos en este chat
+
+            console.log(`Cargando chat: ${title} (${id})`);
+            currentChatId = id;
+            // Actualiza la referencia a la colección de mensajes para el nuevo chat
+            messagesCollectionRef = collection(db, `artifacts/${appId}/users/${currentUserId}/chats/${currentChatId}/messages`);
+
+            // Desuscribe el listener de mensajes del chat anterior si existe
+            if (unsubscribeFromFirestore) {
+                unsubscribeFromFirestore();
+                console.log("Previous message listener detached.");
+            }
+
+            chatHistoryDiv.innerHTML = ''; // Limpia la vista del chat actual
+            appendMessage('text', `Has cambiado al chat: "${title}"`, 'bot'); // Mensaje de bienvenida al nuevo chat
+            setupFirestoreListener(); // Configura el listener para el nuevo chat
+
+            // Actualiza el resaltado en la lista de chats del sidebar
+            document.querySelectorAll('.chat-list-item').forEach(item => {
+                if (item.dataset.chatId === currentChatId) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+        };
+
+        /**
+         * Crea un nuevo chat en Firestore y lo carga en la UI.
+         * @param {string} initialTitle - El título inicial del nuevo chat.
+         * @param {boolean} isDefault - Indica si este es el chat predeterminado (ej: al inicio de la app).
+         */
+        const createNewChat = async (initialTitle = "Nuevo Chat", isDefault = false) => {
+            if (!currentUserId) {
+                console.error("No user ID to create a new chat.");
+                return;
+            }
+            console.log("Creando nuevo chat...");
+
+            const newChatRef = await addDoc(collection(db, `artifacts/${appId}/users/${currentUserId}/chats`), {
+                title: initialTitle, // Título inicial
+                createdAt: serverTimestamp() // Usa timestamp del servidor para ordenar
+            });
+            console.log("Nuevo chat creado con ID:", newChatRef.id);
+            await loadChat(newChatRef.id, initialTitle); // Carga el nuevo chat
+            if (!isDefault) { // Solo muestra el mensaje si no es el chat inicial al cargar la app
+                appendMessage('text', "¡Hola! Soy tu Eco-Chatbot. ¿En qué puedo ayudarte hoy con el reciclaje, la reutilización o la reparación?", 'bot');
+            }
+            closeNav(); // Cierra el sidebar
+        };
+
+        /**
+         * Configura un listener en Firestore para los mensajes del chat actual.
+         * Se encarga de renderizar los mensajes en la UI a medida que llegan.
+         */
+        const setupFirestoreListener = () => {
+            if (!currentUserId || !currentChatId) {
+                console.error("No current user ID or chat ID to setup Firestore listener.");
+                return;
+            }
+
+            if (unsubscribeFromFirestore) {
+                unsubscribeFromFirestore(); // Desactiva listener anterior
+            }
+
+            const q = query(messagesCollectionRef, orderBy("timestamp", "asc"));
+
+            console.log(`Setting up Firestore listener for chat: ${currentChatId}`);
+            unsubscribeFromFirestore = onSnapshot(q, (snapshot) => {
+                // Si es un cambio inicial o se han añadido mensajes, vacía y renderiza.
+                // Esto maneja el cambio de chat y la carga inicial.
+                if (snapshot.docChanges().length > 0 && snapshot.docChanges()[0].type === 'added' && chatHistoryDiv.children.length === 0) {
+                     chatHistoryDiv.innerHTML = '';
+                     snapshot.forEach(docChange => {
+                        const message = docChange.data();
+                        if (message.type === 'text') {
+                            appendMessage('text', message.content, message.sender);
+                        } else if (message.type === 'image') {
+                            appendMessage('image', message.content, message.sender);
+                        }
+                     });
+                } else {
+                     // Para cambios subsecuentes, solo agrega los nuevos mensajes
+                     snapshot.docChanges().forEach(change => {
+                         if (change.type === "added") {
+                             const message = change.doc.data();
+                             if (message.type === 'text') {
+                                 appendMessage('text', message.content, message.sender);
+                             } else if (message.type === 'image') {
+                                 appendMessage('image', message.content, message.sender);
+                             }
+                         }
+                     });
+                }
+                scrollToBottom();
+            }, (error) => {
+                console.error("Error listening to Firestore messages:", error);
+                appendMessage('text', "Error al cargar los mensajes del chat.", 'bot');
+            });
+        };
+
+        // --- Funciones de UI/Mensajería ---
+
+        /**
+         * Desplaza el historial de chat hasta el final.
+         */
+        const scrollToBottom = () => {
+            chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+        };
+
+        /**
+         * Añade un mensaje al historial de chat en la UI.
+         * @param {string} type - Tipo de mensaje ('text' o 'image').
+         * @param {string} content - Contenido del mensaje (texto o URL de imagen).
+         * @param {string} sender - Quién envió el mensaje ('user' o 'bot').
+         */
+        const appendMessage = (type, content, sender) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+
+            if (type === 'text') {
+                const textBubble = document.createElement('div');
+                textBubble.className = `max-w-[70%] p-3 rounded-lg shadow-sm ${
+                    sender === 'user'
+                        ? 'bg-blue-500 text-white rounded-br-none'
+                        : 'bg-gray-200 text-gray-800 rounded-bl-none'
+                }`;
+                // Patrón a buscar en el texto para los botones
+                const buttonIndicator = "\n\n¿Qué te gustaría hacer? Puedes elegir una de estas opciones:";
+                const buttonsTextStart = content.indexOf(buttonIndicator);
+
+                if (buttonsTextStart !== -1) {
+                    // Si se encuentra el indicador de botones, separamos el texto principal
+                    const actualText = content.substring(0, buttonsTextStart).trim();
+                    textBubble.innerHTML = actualText.replace(/\n/g, '<br>'); // Permite saltos de línea
+                    messageDiv.appendChild(textBubble);
+                    chatHistoryDiv.appendChild(messageDiv); // Agrega el mensaje de texto primero
+
+                    // Luego, agrega los botones
+                    const options = ["Reciclar", "Reutilizar", "Reparar"];
+                    appendButtons(options); // Llama a la función para crear y añadir los botones
+                } else {
+                    textBubble.innerHTML = content.replace(/\n/g, '<br>'); // Permite saltos de línea
+                    messageDiv.appendChild(textBubble);
+                    chatHistoryDiv.appendChild(messageDiv);
+                }
+            } else if (type === 'image') {
+                const imageWrapper = document.createElement('div');
+                imageWrapper.className = "max-w-[70%] p-1 rounded-lg bg-white shadow-md";
+                const imgElement = document.createElement('img');
+                imgElement.src = content;
+                imgElement.alt = "Uploaded";
+                imgElement.className = "rounded-lg w-full h-full object-cover";
+                imageWrapper.appendChild(imgElement);
+                messageDiv.appendChild(imageWrapper);
+                chatHistoryDiv.appendChild(messageDiv);
+            } else if (type === 'loading') {
+                const loadingBubble = document.createElement('div');
+                loadingBubble.className = "max-w-[70%] p-3 rounded-lg bg-gray-200 text-gray-800 rounded-bl-none";
+                loadingBubble.innerHTML = `
+                    <div class="dot-pulse">
+                        <div></div><div></div><div></div>
+                    </div>
+                `;
+                messageDiv.appendChild(loadingBubble);
+                messageDiv.id = 'loading-indicator'; // Asigna un ID para poder eliminarlo después
+                chatHistoryDiv.appendChild(messageDiv);
+            }
+            scrollToBottom();
+        };
+
+        /**
+         * Añade botones de acción a la UI del chat.
+         * @param {string[]} options - Array de textos para los botones.
+         */
+        const appendButtons = (options) => {
+            const buttonsContainerDiv = document.createElement('div');
+            buttonsContainerDiv.className = 'flex flex-wrap justify-start gap-2 mt-2';
+
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.className = 'bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-full shadow-sm transition-colors duration-200';
+                button.addEventListener('click', () => {
+                    userInputTextarea.value = option; // Pone el texto en la caja de entrada
+                    sendMessage(); // Envía el mensaje
+                });
+                buttonsContainerDiv.appendChild(button);
+            });
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex justify-start'; // Contenedor para alinear los botones a la izquierda
+            messageDiv.appendChild(buttonsContainerDiv);
+            chatHistoryDiv.appendChild(messageDiv);
+            scrollToBottom();
+        };
+
+        /**
+         * Elimina el indicador de carga del chat.
+         */
+        const removeLoadingIndicator = () => {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            if (loadingIndicator) {
+                loadingIndicator.remove();
+            }
+        };
+
+        /**
+         * Convierte un archivo de imagen a formato Base64.
+         * @param {File} file - El archivo de imagen.
+         * @returns {Promise<string>} Promesa que resuelve con la cadena Base64.
+         */
+        const getBase64 = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]); // Solo la parte Base64
+                reader.onerror = error => reject(error);
+            });
+        };
+
+        // --- Manejo de Carga de Imagen ---
+        imageUploadInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                selectedImageFile = file;
+                imagePreview.src = URL.createObjectURL(file);
+                imagePreviewContainer.classList.remove('hidden');
+            } else {
+                selectedImageFile = null;
+                imageUploadInput.value = '';
+                imagePreview.src = '#';
+                imagePreviewContainer.classList.add('hidden');
+            }
+        });
+
+        clearImageButton.addEventListener('click', () => {
+            selectedImageFile = null;
+            imageUploadInput.value = '';
+            imagePreview.src = '#';
+            imagePreviewContainer.classList.add('hidden');
+        });
+
+        cameraButton.addEventListener('click', () => {
+            imageUploadInput.click();
+        });
+
+        // --- Envío de Mensajes al Backend y Firebase ---
+        const sendMessage = async () => {
+            const userText = userInputTextarea.value.trim();
+            if (!userText && !selectedImageFile) {
+                return; // No envía si no hay texto ni imagen
+            }
+
+            if (!currentUserId || !currentChatId) {
+                appendMessage('text', "El chatbot no está listo. Por favor, espera mientras se inicializa la sesión.", 'bot');
+                return;
+            }
+
+            isLoading = true;
+            sendButton.disabled = true; // Deshabilita el botón de envío
+            appendMessage('loading', null, 'bot'); // Muestra indicador de carga
+
+            const fileToSend = selectedImageFile;
+            // Limpia la entrada de usuario y la vista previa de imagen inmediatamente
+            selectedImageFile = null;
+            userInputTextarea.value = '';
+            imageUploadInput.value = '';
+            imagePreview.src = '#';
+            imagePreviewContainer.classList.add('hidden');
+
+            let base64Image = null;
+            if (fileToSend) {
+                try {
+                    base64Image = await getBase64(fileToSend);
+                } catch (error) {
+                    console.error("Error converting image to base64:", error);
+                    removeLoadingIndicator();
+                    appendMessage('text', "Lo siento, hubo un error al procesar la imagen. Por favor, intenta de nuevo.", 'bot');
+                    isLoading = false;
+                    sendButton.disabled = false;
+                    return;
+                }
+            }
+
+            // Guarda el mensaje del usuario en Firestore en la colección de mensajes del chat actual
+            if (fileToSend) {
+                await addDoc(messagesCollectionRef, {
+                    type: 'image',
+                    content: URL.createObjectURL(fileToSend), // Guarda la URL de objeto para previsualización
+                    sender: 'user',
+                    timestamp: serverTimestamp() // Usa timestamp del servidor
+                });
+            }
+            if (userText) {
+                await addDoc(messagesCollectionRef, {
+                    type: 'text',
+                    content: userText,
+                    sender: 'user',
+                    timestamp: serverTimestamp() // Usa timestamp del servidor
+                });
+
+                // Si es la primera pregunta en un chat que aún tiene el título "Nuevo Chat", actualiza el título
+                const chatDocRef = doc(db, `artifacts/${appId}/users/${currentUserId}/chats`, currentChatId);
+                const chatDoc = await getDoc(chatDocRef);
+                if (chatDoc.exists() && chatDoc.data().title === "Nuevo Chat") {
+                    const newTitle = userText.substring(0, 50) + (userText.length > 50 ? '...' : '');
+                    await setDoc(chatDocRef, { title: newTitle }, { merge: true });
+                }
+            }
+
+            try {
+                const backendUrl = 'http://localhost:5000/generate_content'; // Asegúrate de que esta URL sea correcta
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_message: userText,
+                        image_data: base64Image ? { mimeType: fileToSend.type, data: base64Image } : null,
+                        user_id: currentUserId,
+                        chat_id: currentChatId // ¡IMPORTANTE: Envía el chat_id!
+                    })
+                });
+
+                const result = await response.json();
+                console.log("Backend Response:", result);
+
+                removeLoadingIndicator(); // Elimina el indicador de carga
+
+                if (result.gemini_response) {
+                    // Guarda la respuesta del bot en Firestore
+                    await addDoc(messagesCollectionRef, {
+                        type: 'text',
+                        content: result.gemini_response,
+                        sender: 'bot',
+                        timestamp: serverTimestamp()
+                    });
+                } else if (result.error) {
+                    await addDoc(messagesCollectionRef, {
+                        type: 'text',
+                        content: `Error del bot: ${result.error}`,
+                        sender: 'bot',
+                        timestamp: serverTimestamp()
+                    });
+                } else {
+                    await addDoc(messagesCollectionRef, {
+                        type: 'text',
+                        content: "Lo siento, el backend no pudo generar una respuesta. Por favor, intenta de nuevo.",
+                        sender: 'bot',
+                        timestamp: serverTimestamp()
+                    });
+                }
+
+            } catch (error) {
+                console.error("Error calling backend:", error);
+                removeLoadingIndicator();
+                await addDoc(messagesCollectionRef, {
+                    type: 'text',
+                    content: "Lo siento, hubo un error al comunicarse con el servidor. Por favor, intenta de nuevo.",
+                    sender: 'bot',
+                    timestamp: serverTimestamp()
+                });
+            } finally {
+                isLoading = false;
+                sendButton.disabled = false; // Habilita el botón de envío
+            }
+        };
+
+        // --- Event Listeners Globales ---
+        sendButton.addEventListener('click', sendMessage);
+        userInputTextarea.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { // Envía al presionar Enter, a menos que Shift+Enter
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Event Listeners para el menú hamburguesa
+        openSidebarBtn.addEventListener('click', openNav);
+        sidebarOverlay.addEventListener('click', closeNav); // Cierra al hacer clic en el overlay
+        startNewChatSidebarBtn.addEventListener('click', () => createNewChat("Nuevo Chat")); // Botón de nuevo chat en sidebar
+
+        // ¡Nuevo Event Listener para el botón de regresar!
+        backButton.addEventListener('click', () => {
+            history.back(); // Esta función vuelve a la página anterior en el historial del navegador
+        });
+
+        // --- Funciones del Menú Hamburguesa ---
+        function openNav() {
+            mySidebar.classList.add('open');
+            sidebarOverlay.classList.add('active');
+        }
+
+        function closeNav() {
+            mySidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        }
+
+        // Inicializa Firebase al cargar el script
+        initializeFirebase();
+    </script>
+</body>
+</html>

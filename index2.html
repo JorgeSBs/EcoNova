@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoNova</title>
+  <link rel="shortcut icon" href="./assets/Logo_1.png" type="image/x-icon" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <script defer src="./js/index.js" type="module"></script>
+  <link rel="stylesheet" href="./css/home.css" />
+  <link rel="stylesheet" href="./css/notificacion.css">
+  <link rel="manifest" href="./manifest.json">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="EcoNova">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+</head>
+
+<body>
+  <div id="custom-toast-success" class="custom-toast custom-toast-hidden" role="alert">
+    <div class="custom-toast-icon">
+      <svg class="custom-toast-svg-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+        viewBox="0 0 20 20">
+        <path
+          d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z" />
+      </svg>
+      <span class="sr-only">Check icon</span>
+    </div>
+    <div class="custom-toast-message"></div> <button type="button" class="custom-toast-close-button"
+      data-dismiss-target="#custom-toast-success" aria-label="Close">
+      <span class="sr-only">Close</span>
+      <svg class="custom-toast-svg-close-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 14 14">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+      </svg>
+    </button>
+  </div>
+  <section class="navbar-dark">
+    <div class="navbar-container container">
+      <a class="branding" href="./index2.html">
+        <img class="branding__image" src="./assets/Logo_1.png" alt="EcoNova logo">
+        <h3 class="h3 branding__title">EcoNova</h3>
+      </a>
+      <button class="menu-toggler">
+        <img src="./assets/menu-icon-white.svg" alt="Menu icon">
+      </button>
+      <nav class="nav-menu">
+        <ul>
+          <li><a class="link" href="./index2.html">Inicio</a></li>
+          <li><a class="link link--active" href="./actualizate/actualizate-usuario.html">EcoGuia</a></li>
+          <li><a class="link" href="chatbot.html">Chatbot</a></li>
+          <li><a class="link" href="./nosotros/nosotros-usuario.html">Nosotros</a></li>
+        </ul>
+
+        <!-- Botón de login (opcional) -->
+        <div id="loginBtnArea">
+          <a class="btn btn-primary" href="IniciarSesion.html">Iniciar Sesión</a>
+        </div>
+
+        <!-- Perfil de usuario -->
+        <div class="nav-menu__button" style="position: relative;">
+          <div id="userProfileArea">
+            <img id="userProfilePic" class="profile-icon" onclick="toggleMenu()"
+              src="assets_inicio/img/default-avatar.png" alt="Profile Picture">
+            <span id="userName" class="user-name"></span>
+            <div class="profile-menu" id="profileMenu">
+              <a href="#">Editar Perfil</a>
+              <a href="#">Configuración</a>
+              <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </section>
+
+  <header class="header-home">
+    <section class="hero-home">
+      <div class="hero-home-container container">
+        <div class="hero-home__image">
+          <img src="./assets/Principal.png" alt="Mockup earth">
+        </div>
+        <div class="hero-home__content">
+          <h1 class="display black">🌍 Innovación verde para un futuro sostenible</h1>
+          <h3 class="h3 semi-bold">Soluciones ecológicas para un mundo mejor</h3>
+        </div>
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <section class="about-us">
+      <div class="about-us-container container">
+        <div class="about-us__title">
+          <h2 class="h1 semi-bold"><span class="text-active">Nuestra Esencia</span></h2>
+          <p><strong>Misión:</strong> Desarrollar soluciones ecológicas innovadoras que reduzcan el impacto ambiental y
+            fomenten la economía circular.</p>
+          <p><strong>Visión:</strong> Ser líderes en Latinoamérica en tecnologías limpias, regenerando el planeta y
+            empoderando comunidades responsables.</p>
+        </div>
+        <div class="about-us__cards">
+          <div class="card">
+            <div class="card-image"><img src="./assets/soñadores-image.svg" alt="Dream illustration" /></div>
+            <div class="card-content">
+              <h3 class="h3 semi-bold">Sostenibilidad</h3>
+              <p>Nuestro motor es el respeto por la Tierra y sus recursos.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-image"><img src="./assets/conscientes-image.svg" alt="Dream illustration" /></div>
+            <div class="card-content">
+              <h3 class="h3 semi-bold">Innovación Tecnológica</h3>
+              <p>Integramos IA, energías limpias y soluciones circulares.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-image"><img src="./assets/apasionados-image.svg" alt="Dream illustration" /></div>
+            <div class="card-content">
+              <h3 class="h3 semi-bold">Educación Ambiental</h3>
+              <p>Formamos una ciudadanía consciente y empoderada.</p>
+            </div>
+          </div>
+        </div>
+        <div class="about-us__button"><a class="btn btn-secondary btn-md" href="./nosotros/nosotros.html">Conocer
+            más</a></div>
+      </div>
+    </section>
+
+    <section class="news">
+      <div class="news-container container">
+        <div class="news__title">
+          <h2 class="h1 semi-bold"><span class="text-active">Despierta </span> tu conciencia <span
+              class="text-active">ecológica</span></h2>
+        </div>
+      </div>
+    </section>
+
+    <section class="services">
+      <div class="container">
+        <h2 class="h1 semi-bold text-active">Nuestros Servicios</h2>
+        <ul>
+          <li><strong>ReciBot:</strong> Plataforma con IA para reciclaje inteligente.</li>
+          <li><strong>EcoEducación:</strong> Programas educativos sobre sostenibilidad.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="second-chance">
+      <div class="second-chance-container container">
+        <div class="second-chance__content">
+          <h3 class="h3 extra-bold">♻️ ¡Haz parte del cambio con EcoNova!</h3>
+
+        </div>
+        <div class="second-chance__image"><img src="./assets/salvar-concepto-planeta_23-2148520709.png"
+            alt="Sowing image"></div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <section class="footer">
+      <div class="footer-container container">
+        <div class="footer-social">
+          <h3 class="h3 h3-upper extrabold">El futuro no es desechable</h3>
+          <div class="footer-social__container">
+            <a href="https://api.whatsapp.com/send?phone=5535547450"><img src="./assets/whatsapp-icon.svg"
+                alt="Whatsapp icon"></a>
+            <a href="mailto:yahiralexisbalbuenanorve@gmail.com"><img src="./assets/mail-icon.svg" alt="Mail icon"></a>
+          </div>
+        </div>
+        <div class="footer-branding">
+          <a class="footer-branding__container" href="#">
+            <img src="./assets/Logo_1.png" alt="EcoNova logo">
+            <p class="body bold">EcoNova © 2025</p>
+          </a>
+        </div>
+      </div>
+    </section>
+  </footer>
+
+  <!-- Firebase Auth Script -->
+  <script src="../assets_inicio/js/firebase.js"></script>
+  <script src="../assets_inicio/js/app.js"></script>
+  <script src="../js/notificacion.js"></script>
+  <script>
+        // Registra el Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado con éxito:', registration);
+                    })
+                    .catch(error => {
+                        console.error('Fallo el registro del Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>
