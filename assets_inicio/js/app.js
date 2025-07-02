@@ -141,7 +141,7 @@ function iniciarSesionCorreo() {
             
             console.log(user.user); // Muestra los datos del usuario en consola
             // *** CAMBIO AQUÍ: Redirige a la página de destino en la misma pestaña/ventana ***
-            window.location.href = 'index2.html';
+            window.location.href = 'chatbot.html';
         })
         .catch(error => {
             // Muestra un mensaje de error si el inicio de sesión falla
@@ -195,7 +195,7 @@ function iniciarSesionGoogle() {
 
             console.log(result.user); // Muestra los datos del usuario en consola
             // *** CAMBIO AQUÍ: Redirige a la página de destino en la misma pestaña/ventana ***
-            window.location.href = 'index2.html'; 
+            window.location.href = 'chatbot.html'; 
         })
         .catch(error => {
             // Muestra un mensaje de error si el inicio de sesión con Google falla

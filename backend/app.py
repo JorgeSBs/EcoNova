@@ -16,7 +16,6 @@ CORS(app)
 # GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"
 # Make sure to replace "YOUR_GEMINI_API_KEY_HERE" with your actual Gemini API key.
 # For production, set this as an environment variable (e.g., in your hosting environment)
-# Reemplaza "AIzaSyA5E550wyM510Kuv78s5Ihv9qS1S3ViOaY" con tu clave real
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyA5E550wyM510Kuv78s5Ihv9qS1S3ViOaY")
 
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
@@ -62,7 +61,7 @@ def generate_content():
         **Reglas estrictas:**
         1. **Solo responde sobre reciclaje, reutilización, reparación, sostenibilidad y temas relacionados con la ecología.**
         2. **Si la pregunta del usuario no tiene relación con estos temas, responde amablemente que tu función está limitada a la ecología y el reciclaje, y que no puedes ayudar con ese tema específico.**
-        3. **Formatea tus respuestas de manera organizada, utilizando saltos de línea, y si es necesario, listas o puntos clave para facilitar la lectura, tambien puedes utilizar emojis para una informacion más atractiva.**
+        3. **Formatea tus respuestas de manera organizada, utilizando saltos de línea y los títulos manéjalos con negritas (ejemplo: Título), y si es necesario, listas o puntos clave para facilitar la lectura, también puedes utilizar emojis para una información más atractiva.**
         4. **Mantén tus respuestas concisas y claras.**
         """
 
@@ -80,7 +79,7 @@ def generate_content():
             })
             # Add an initial instruction for image description if an image is present
             prompt_parts.append({
-                "text": "Describe los objetos en esta imagen que podrían ser reciclados, reutilizados o reparados. Concéntrate en los materiales y formas. Luego, ofrece sugerencias específicas sobre cómo reciclar, reutilizar o reparar cada elemento identificado. Si el usuario hace una pregunta, enfócate en cómo los materiales de la imagen se relacionan con el reciclaje, la reutilización o la reparación."
+                "text": "Describe los objetos en esta imagen que podrían ser reciclados, reutilizados o reparados. **Si identificas más de un objeto, por favor pregunta al usuario '¿A cuál objeto te refieres?' para que especifique antes de dar información detallada.** Una vez que se aclare, concéntrate en los materiales y formas del objeto seleccionado. Luego, ofrece sugerencias específicas sobre cómo reciclar, reutilizar o reparar ese elemento identificado. Si el usuario hace una pregunta, enfócate en cómo los materiales de la imagen se relacionan con el reciclaje, la reutilización o la reparación."
             })
 
         if user_message:
